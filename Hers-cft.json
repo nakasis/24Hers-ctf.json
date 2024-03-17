@@ -1,0 +1,212 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "this template provisions network resourses for Hers",
+    "Metadata": {
+
+    },
+    "Parameters": {
+      "HersVPCCidrPARA": {
+          "Description": "please provide a cidr block for Hers VPC",
+          "Type": "String"
+      },
+      
+      "PUBSNAZPARA": {
+          "Description": "please provide the AZ for public subnet",
+          "Type": "AWS::EC2::AvailabilityZone::Name"
+      },
+      "PUBSNCidrPARA": {
+          "Description": "please provide the Cidr block for Hers public subnet",
+          "Type": "String"
+      },
+
+      "PRIVSNCidrPARA": {
+          "Description": "please provide Cidr block for Hers private subnet",
+          "Type": "String"
+      },
+      
+      "PRIVSNAZPARA": {
+          "Description": "provide AZ for Hers Private subnet",
+          "Type": "AWS::EC2::AvailabilityZone::Name"
+      },
+      
+      "WebserverImageId": {
+          "Description": "Provede ImageId for Hers Webserver",
+          "Type": "AWS::EC2::Image::Id"
+      }, 
+
+      
+      "WebserverInstanceType": {
+          "Description": "Provide instance type for Hers Webserver",
+          "Type": "String"
+      }, 
+      
+      "WebserverKeyPair": {
+          "Description": "Provide Key Pair for Hers Webserver",
+          "Type": "AWS::EC2::KeyPair::KeyName"
+      },
+
+      "HersSNPubRtRouteDestnCidrBlock": {
+          "Description": "Provide destination CidrBlock",
+          "Type": "String"
+      }
+       
+      
+    },
+    "Mappings": {
+       
+      }
+      
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+        
+        "HersVPC": {
+          "Type": "AWS::EC2::VPC",
+          "Properties": {
+            "CidrBlock": { "Ref": "HersVPCCidrPARA" },
+            "Tags": [{ "Key": "Name", "Value":  "HersVPC" }]
+          }
+        }, 
+        
+        "HersSNPUB": {
+          "Type": "AWS::EC2::Subnet",
+          "Properties": {
+            "AvailabilityZone": { "Ref": "PUBSNAZPARA" },
+            "VpcId": { "Ref": "HersVPC" },
+            "CidrBlock": { "Ref": "PUBSNCidrPARA" },
+            "Tags": [{ "Key": "Name", "Value":  "HersSNPUB" }
+            ]
+          }
+        }, 
+        
+        "HersSNPRIV": {
+          "Type": "AWS::EC2::Subnet",
+          "Properties": {
+            "AvailabilityZone": { "Ref": "PRIVSNAZPARA" },
+            "VpcId": { "Ref": "HersVPC" },
+            "CidrBlock":  { "Ref": "PRIVSNCidrPARA" },
+            "Tags": [{ "Key": "Name", "Value":  "HersSNPRIV" }]
+          }
+        },
+        
+        "HersIGW": {
+          "Type": "AWS::EC2::InternetGateway",
+          "Properties": {
+            "Tags": [{ "Key": "Name", "Value":  "HersIGW" }]
+          }
+        },
+        "AttachGateway": {
+          "Type": "AWS::EC2::VPCGatewayAttachment",
+          "Properties": {
+            "VpcId": { "Ref": "HersVPC" },
+            "InternetGatewayId": { "Ref": "HersIGW" }
+          }
+        },
+        
+        "HersSNPubRt": {
+          "Type": "AWS::EC2::RouteTable",
+          "Properties": {
+            "VpcId": { "Ref": "HersVPC" },
+            "Tags": [{ "Key": "Name", "Value":  "HersSNPubRt" }]
+          }
+        },
+
+        
+        "HersSNPrivRt": {
+          "Type": "AWS::EC2::RouteTable",
+          "Properties": {
+            "VpcId": { "Ref": "HersVPC" },
+            "Tags": [{ "Key": "Name", "Value":  "HersSNPrivRt" }]
+          }
+        },
+        
+        "HersSNPrivRtAss": {
+          "Type": "AWS::EC2::SubnetRouteTableAssociation",
+          "Properties": {
+            "SubnetId": { "Ref": "HersSNPRIV" },
+            "RouteTableId": { "Ref": "HersSNPrivRt" }
+            
+          }
+        },
+
+        "HersSNPubRtAss": {
+          "Type": "AWS::EC2::SubnetRouteTableAssociation",
+          "Properties": {
+            "SubnetId": { "Ref": "HersSNPUB" },
+            "RouteTableId": { "Ref": "HersSNPubRt" }
+            
+          }
+        },
+        
+        "HersPubRoute": {
+          "Type": "AWS::EC2::Route",
+          "Properties": {
+            "RouteTableId": { "Ref": "HersSNPubRt" },
+            "DestinationCidrBlock": { "Ref": "HersSNPubRtRouteDestnCidrBlock" },
+            "GatewayId": { "Ref": "HersIGW" }
+          }
+        },
+        
+        "HersWebserverSG" : {
+          "Type" : "AWS::EC2::SecurityGroup",
+          "Properties" : {
+            "GroupDescription" : "Hers Webserver Security group",
+            "SecurityGroupIngress" : [ 
+              {
+                "IpProtocol" : "tcp",
+                "FromPort" : 22,
+                "ToPort" : 22,
+                "CidrIp" : "0.0.0.0/0"
+              },
+              {
+                "IpProtocol" : "tcp",
+                "FromPort" : 80,
+                "ToPort" : 80,
+                "CidrIp" : "0.0.0.0/0"
+              }
+            ],
+            "VpcId" : { "Ref": "HersVPC" },
+            "Tags" :  [
+            { "Key": "Name", "Value":  "HersWebserver" }
+            ] 
+          }
+        },
+        
+        "HersWebserver": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "KeyName": { "Ref": "WebserverKeyPair" },
+                "ImageId":  { "Ref": "WebserverImageId" },
+                "InstanceType": { "Ref": "WebserverInstanceType" },                
+                "NetworkInterfaces" : [{
+                      "Description" : "This is Network Interface for Hers Webserver",
+                      "GroupSet" : [{ "Ref": "HersWebserverSG" }],
+                      "SubnetId" : { "Ref": "HersSNPUB" },
+                      "AssociatePublicIpAddress": "true",
+                      "DeviceIndex": "0"
+                    }],
+                            
+                "Tags" : [ { "Key": "Name", "Value":  "HersWebserver" }],
+                "UserData": {
+                  "Fn::Base64": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "#!/bin/bash -ex",
+                        "-"
+                      ]
+                    ]
+                  }
+                }
+
+                 }
+                }   
+        
+    },
+    "Outputs": {
+
+    }
+}
