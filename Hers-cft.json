@@ -29,11 +29,6 @@
           "Type": "AWS::EC2::AvailabilityZone::Name"
       },
       
-      "WebserverImageId": {
-          "Description": "Provede ImageId for Hers Webserver",
-          "Type": "AWS::EC2::Image::Id"
-      }, 
-
       
       "WebserverInstanceType": {
           "Description": "Provide instance type for Hers Webserver",
@@ -53,7 +48,19 @@
       
     },
     "Mappings": {
-       
+      "HersAMIRegionMap": {
+        "us-east-1": {
+          "AMIId": "ami-02d7fd1c2af6eead0"
+        },
+        "us-west-2": {
+          "AMIId": "ami-0c7843ce70e666e51"
+        },
+        "us-west-1": {
+          "AMIId": "ami-0830c9faf0efc29ff"
+        },
+        "us-east-2": {
+          "AMIId": "ami-01387af90a62e3c01"
+        } 
       }
       
 
@@ -179,7 +186,12 @@
             "Type": "AWS::EC2::Instance",
             "Properties": {
                 "KeyName": { "Ref": "WebserverKeyPair" },
-                "ImageId":  { "Ref": "WebserverImageId" },
+                "ImageId":  {"Fn::FindInMap": [
+                    "HersAMIRegionMap",
+                    { "Ref": "AWS::Region" },
+                    "AMIId"
+                ]},
+                
                 "InstanceType": { "Ref": "WebserverInstanceType" },                
                 "NetworkInterfaces" : [{
                       "Description" : "This is Network Interface for Hers Webserver",
