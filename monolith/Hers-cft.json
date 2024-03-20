@@ -69,7 +69,7 @@
 
     },
     "Resources": {
-        
+          
         "HersVPC": {
           "Type": "AWS::EC2::VPC",
           "Properties": {
@@ -98,7 +98,6 @@
             "Tags": [{ "Key": "Name", "Value":  "HersSNPRIV" }]
           }
         },
-        
         "HersIGW": {
           "Type": "AWS::EC2::InternetGateway",
           "Properties": {

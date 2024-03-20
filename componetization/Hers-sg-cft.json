@@ -1,0 +1,53 @@
+{
+"AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Template for Hers compute Security group",
+    "Metadata": {
+
+    },
+    "Parameters": {
+    
+    },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+        "HersWebserverSG" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+              "GroupDescription" : "Hers Webserver Security group",
+              "SecurityGroupIngress" : [ 
+                {
+                  "IpProtocol" : "tcp",
+                  "FromPort" : 22,
+                  "ToPort" : 22,
+                  "CidrIp" : "0.0.0.0/0"
+                },
+                {
+                  "IpProtocol" : "tcp",
+                  "FromPort" : 80,
+                  "ToPort" : 80,
+                  "CidrIp" : "0.0.0.0/0"
+                }
+              ],
+              "VpcId" : { "Fn::ImportValue" : "HersVPCId" },
+              "Tags" :  [
+              { "Key": "Name", "Value":  "HersWebserver" }
+              ] 
+            }
+          }
+
+    },
+    "Outputs": {
+      "HersWebserverSGOutput" : {
+        "Description" : "This exports Hers Webserver SG Id",
+        "Value" : { "Ref": "HersWebserverSG" },
+        "Export" : {
+          "Name" : "HersWebserverSGId"
+        }
+      }
+
+    }
+}

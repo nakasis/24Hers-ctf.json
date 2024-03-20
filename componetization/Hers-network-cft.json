@@ -1,0 +1,149 @@
+{
+"AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Metadata": {
+
+    },
+    "Parameters": {
+        "HersVPCCidrPARA": {
+            "Description": "please provide a cidr block for Hers VPC",
+            "Type": "String"
+        },
+        
+        "PUBSNAZPARA": {
+            "Description": "please provide the AZ for public subnet",
+            "Type": "AWS::EC2::AvailabilityZone::Name"
+        },
+        "PUBSNCidrPARA": {
+            "Description": "please provide the Cidr block for Hers public subnet",
+            "Type": "String"
+        },
+  
+        "PRIVSNCidrPARA": {
+            "Description": "please provide Cidr block for Hers private subnet",
+            "Type": "String"
+        },
+        
+        "PRIVSNAZPARA": {
+            "Description": "provide AZ for Hers Private subnet",
+            "Type": "AWS::EC2::AvailabilityZone::Name"
+        },
+
+        "HersSNPubRtRouteDestnCidrBlock": {
+            "Description": "Provide destination CidrBlock",
+            "Type": "String"
+        }
+    
+    },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+        "HersVPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+              "CidrBlock": { "Ref": "HersVPCCidrPARA" },
+              "Tags": [{ "Key": "Name", "Value":  "HersVPC" }]
+            }
+          }, 
+          
+          "HersSNPUB": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": { "Ref": "PUBSNAZPARA" },
+              "VpcId": { "Ref": "HersVPC" },
+              "CidrBlock": { "Ref": "PUBSNCidrPARA" },
+              "Tags": [{ "Key": "Name", "Value":  "HersSNPUB" }
+              ]
+            }
+          }, 
+          
+          "HersSNPRIV": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": { "Ref": "PRIVSNAZPARA" },
+              "VpcId": { "Ref": "HersVPC" },
+              "CidrBlock":  { "Ref": "PRIVSNCidrPARA" },
+              "Tags": [{ "Key": "Name", "Value":  "HersSNPRIV" }]
+            }
+          },
+          "HersIGW": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+              "Tags": [{ "Key": "Name", "Value":  "HersIGW" }]
+            }
+          },
+          "AttachGateway": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+              "VpcId": { "Ref": "HersVPC" },
+              "InternetGatewayId": { "Ref": "HersIGW" }
+            }
+          },
+          
+          "HersSNPubRt": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+              "VpcId": { "Ref": "HersVPC" },
+              "Tags": [{ "Key": "Name", "Value":  "HersSNPubRt" }]
+            }
+          },
+  
+          
+          "HersSNPrivRt": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+              "VpcId": { "Ref": "HersVPC" },
+              "Tags": [{ "Key": "Name", "Value":  "HersSNPrivRt" }]
+            }
+          },
+          
+          "HersSNPrivRtAss": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "SubnetId": { "Ref": "HersSNPRIV" },
+              "RouteTableId": { "Ref": "HersSNPrivRt" }
+              
+            }
+          },
+  
+          "HersSNPubRtAss": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "SubnetId": { "Ref": "HersSNPUB" },
+              "RouteTableId": { "Ref": "HersSNPubRt" }
+              
+            }
+          },
+          
+          "HersPubRoute": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+              "RouteTableId": { "Ref": "HersSNPubRt" },
+              "DestinationCidrBlock": { "Ref": "HersSNPubRtRouteDestnCidrBlock" },
+              "GatewayId": { "Ref": "HersIGW" }
+            }
+          }
+
+    },
+    "Outputs": {
+      "HersVPCOutput" : {
+        "Description" : "This exports Hers VPC Id",
+        "Value" : { "Ref": "HersVPC" },
+        "Export" : {
+          "Name" : "HersVPCId"
+        }
+      }, 
+      "HersSNPubOutput" : {
+        "Description" : "This exports Hers Public Subnet Id",
+        "Value" : { "Ref": "HersSNPUB" },
+        "Export" : {
+          "Name" : "HersSNPubOutId"
+        }
+      }
+
+    }
+}

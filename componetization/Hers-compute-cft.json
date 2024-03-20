@@ -1,0 +1,79 @@
+{
+"AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "",
+    "Metadata": {
+
+    },
+    "Parameters": {
+        "WebserverInstanceType": {
+            "Description": "Provide instance type for Hers Webserver",
+            "Type": "String"
+        }, 
+        
+        "WebserverKeyPair": {
+            "Description": "Provide Key Pair for Hers Webserver",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        }
+    
+    },
+    "Mappings": {
+        "HersAMIRegionMap": {
+            "us-east-1": {
+              "AMIId": "ami-02d7fd1c2af6eead0"
+            },
+            "us-west-2": {
+              "AMIId": "ami-0c7843ce70e666e51"
+            },
+            "us-west-1": {
+              "AMIId": "ami-0830c9faf0efc29ff"
+            },
+            "us-east-2": {
+              "AMIId": "ami-01387af90a62e3c01"
+            } 
+          }
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+        "HersWebserver": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "KeyName": { "Ref": "WebserverKeyPair" },
+                "ImageId":  {"Fn::FindInMap": [
+                    "HersAMIRegionMap",
+                    { "Ref": "AWS::Region" },
+                    "AMIId"
+                ]},
+                
+                "InstanceType": { "Ref": "WebserverInstanceType" },                
+                "NetworkInterfaces" : [{
+                      "Description" : "This is Network Interface for Hers Webserver",
+                      "GroupSet" : [{  "Fn::ImportValue" : "HersWebserverSGId"  }],
+                      "SubnetId" : { "Fn::ImportValue" : "HersSNPubOutId" },
+                      "AssociatePublicIpAddress": "true",
+                      "DeviceIndex": "0"
+                    }],
+                            
+                "Tags" : [ { "Key": "Name", "Value":  "HersWebserver" }],
+                "UserData": {
+                  "Fn::Base64": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "#!/bin/bash -ex",
+                        "-"
+                      ]
+                    ]
+                  }
+                }
+
+                 }
+                }
+
+    },
+    "Outputs": {
+
+    }
+}
